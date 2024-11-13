@@ -120,7 +120,6 @@ def buscar_mejor_ajuste(nombre, lista_palabras):
     return "Desconocido"
 
 def extraer_fecha_de_archivo(ruta_archivo):
-    # Aquí se añade lógica para PDF, DOCX, PPTX
     try:
         ext = os.path.splitext(ruta_archivo)[1].lower()
         if ext == ".pdf":
@@ -172,9 +171,27 @@ def extraer_fecha_de_archivo(ruta_archivo):
     return "Fecha desconocida"
 
 def obtener_region(ruta_archivo):
-    for region in regiones:
-        if region.lower() in ruta_archivo.lower():
-            return region
+    try:
+        ext = os.path.splitext(ruta_archivo)[1].lower()
+        contenido = ""
+        if ext == ".pdf":
+            reader = PdfReader(ruta_archivo)
+            for page in reader.pages:
+                contenido += page.extract_text().lower()
+        elif ext == ".docx":
+            doc = Document(ruta_archivo)
+            contenido = " ".join([paragraph.text.lower() for paragraph in doc.paragraphs])
+        elif ext == ".pptx":
+            ppt = Presentation(ruta_archivo)
+            for slide in ppt.slides:
+                for shape in slide.shapes:
+                    if shape.has_text_frame:
+                        contenido += shape.text.lower()
+        for region in regiones:
+            if region.lower() in contenido:
+                return region
+    except Exception as e:
+        print(f"Error al determinar la región: {e}")
     return "Región desconocida"
 
 def renombrar_archivo(ruta_archivo):
